@@ -1,0 +1,456 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>首爾旅程</title>
+    <style>
+        /* === 基礎佈局與配色 === */
+        body {
+            background-color: #5c6285;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+            margin: 0;
+            padding: 20px 10px;
+            display: flex;
+            justify-content: center;
+        }
+        .phone-container {
+            width: 100%;
+            max-width: 450px;
+            background-color: rgba(255, 255, 255, 0.1);
+            padding: 20px;
+            border-radius: 20px;
+            box-sizing: border-box;
+        }
+        
+        /* === 頁首與按鈕 === */
+        .header-section { display: flex; justify-content: space-between; align-items: center; color: white; margin-bottom: 25px; }
+        .header-title h2 { margin: 0; font-size: 20px; }
+        .header-title p { margin: 5px 0 0 0; font-size: 13px; opacity: 0.8; }
+        .avatar { width: 50px; height: 50px; border-radius: 50%; border: 2px solid white; background: #ddd; }
+        
+        .tab-menu { display: flex; gap: 8px; margin-bottom: 25px; }
+        .tab-item {
+            flex: 1; padding: 10px 0; text-align: center; color: white;
+            background: rgba(255, 255, 255, 0.15); border-radius: 10px;
+            font-size: 14px; cursor: pointer; transition: 0.3s;
+        }
+        .tab-item.active { background: white; color: #5c6285; font-weight: bold; }
+
+        /* === 分頁顯示控制 === */
+        .page-content { display: none; }
+        .page-content.active { display: block; }
+
+        /* === (1) 行程專屬樣式 === */
+        .day-card { background: white; border-radius: 15px; padding: 15px; margin-bottom: 15px; cursor: pointer; display: block; }
+        .day-header { display: flex; align-items: center; }
+        .date-box { background: #5c6285; color: white; padding: 8px 12px; border-radius: 8px; text-align: center; font-size: 13px; font-weight: bold; line-height: 1.3; min-width: 30px; }
+        .trip-content { flex: 1; margin: 0 15px; font-size: 15px; font-weight: bold; color: #333; }
+        .weather-box { text-align: center; font-size: 12px; color: #666; min-width: 40px; border-left: 1px solid #eee; padding-left: 10px; }
+        
+        .day-detail { display: none; margin-top: 15px; padding-top: 15px; border-top: 1px solid #eee; }
+        .day-card.open .day-detail { display: block; }
+        .timeline { display: flex; margin-bottom: 15px; }
+        .time-box { width: 45px; font-size: 13px; color: #5c6285; font-weight: bold; }
+        .event-box { flex: 1; border-left: 2px solid #5c6285; padding-left: 15px; margin-left: 5px; font-size: 14px; }
+        .event-box h4 { margin: 0 0 5px 0; color: #333; font-size: 15px;}
+        .event-box p { margin: 0; color: #666; font-size: 13px; }
+
+        /* === (2) 票券專屬樣式 === */
+        .ticket-card { background: white; border-radius: 16px; padding: 16px; margin-bottom: 16px; box-shadow: 0 4px 12px rgba(0,0,0,0.08); }
+        .ticket-badge { display: inline-block; background: #eef0f6; color: #5c6285; font-size: 11px; font-weight: bold; padding: 3px 8px; border-radius: 6px; margin-bottom: 10px; }
+        .flight-info { display: flex; align-items: center; justify-content: space-between; margin-top: 8px; }
+        .airport { text-align: center; flex: 1; }
+        .airport h4 { margin: 0; font-size: 24px; color: #333; }
+        .airport p { margin: 4px 0 0 0; font-size: 12px; color: #888; }
+        .time { font-size: 14px; font-weight: bold; color: #5c6285; margin-top: 2px; }
+        .flight-arrow { flex: 1; text-align: center; position: relative; color: #b0b5c9; font-size: 12px; }
+        .flight-arrow::after { content: ""; display: block; height: 2px; background: dashed #cbd0e1; margin-top: 4px; }
+        .ticket-meta { margin-top: 12px; padding-top: 12px; border-top: 1px dashed #eee; font-size: 13px; color: #666; display: flex; justify-content: space-between; }
+
+        /* === (3) 住宿專屬樣式 === */
+        .hotel-card { background: white; border-radius: 16px; padding: 20px; margin-bottom: 16px; box-shadow: 0 4px 12px rgba(0,0,0,0.08); }
+        .hotel-title { font-size: 18px; font-weight: bold; color: #333; margin: 0 0 8px 0; }
+        .hotel-tag { display: inline-block; background: #eef2ff; color: #4f46e5; font-size: 12px; font-weight: bold; padding: 4px 8px; border-radius: 6px; margin-bottom: 15px; }
+        .hotel-info-row { display: flex; margin-bottom: 10px; font-size: 14px; line-height: 1.4; }
+        .info-label { color: #888; min-width: 70px; font-weight: bold; }
+        .info-value { color: #333; flex: 1; }
+        .map-btn-group { display: flex; gap: 10px; margin-top: 20px; }
+        .map-btn { flex: 1; text-align: center; padding: 12px 0; border-radius: 10px; text-decoration: none; font-size: 14px; font-weight: bold; transition: 0.2s; }
+        .btn-naver { background-color: #03C75A; color: white; }
+        .btn-google { background-color: #f1f3f4; color: #5c6285; border: 1px solid #dadce0; }
+
+        /* === (4) 購物專屬樣式 (精緻升級版) === */
+        .shopping-container { background: white; border-radius: 15px; overflow: hidden; box-shadow: 0 4px 12px rgba(0,0,0,0.08); }
+        
+        .sub-tabs { display: flex; padding: 10px 10px 0 10px; border-bottom: 1px solid #f0f0f0; }
+        .sub-tab { flex: 1; text-align: center; padding: 12px 0; font-size: 13px; color: #666; cursor: pointer; font-weight: bold; transition: 0.2s; border-radius: 8px 8px 0 0; }
+        .sub-tab.active { background: #7b83a0; color: white; }
+        
+        .shopping-content { padding: 20px; }
+        .shopping-title { font-size: 15px; font-weight: bold; color: #7b83a0; margin: 0 0 15px 0; letter-spacing: 1px; }
+        
+        /* 獨立清單切換控制 */
+        .shopping-list-container { display: none; flex-direction: column; gap: 12px; margin-bottom: 25px; }
+        .shopping-list-container.active { display: flex; }
+        
+        .shopping-item { display: flex; align-items: center; border: 1px solid #eee; border-radius: 10px; padding: 15px; cursor: pointer; transition: 0.2s; }
+        .shopping-item .checkbox { width: 18px; height: 18px; border: 2px solid #aeb4c9; border-radius: 4px; margin-right: 15px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; }
+        .shopping-item .item-text { flex: 1; overflow: hidden; }
+        .shopping-item .item-text h4 { margin: 0 0 4px 0; font-size: 14px; color: #333; transition: 0.2s; }
+        .shopping-item .item-text p { margin: 0; font-size: 12px; color: #999; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .shopping-item .circle { width: 22px; height: 22px; border: 1px solid #eee; border-radius: 50%; flex-shrink: 0; background: #fafafa; }
+        
+        /* 勾選完成狀態 */
+        .shopping-item.checked .checkbox { background: #7b83a0; border-color: #7b83a0; }
+        .shopping-item.checked .checkbox::after { content: "✔"; color: white; font-size: 12px; }
+        .shopping-item.checked .item-text h4 { text-decoration: line-through; color: #999; }
+        
+        /* 新增輸入框區塊 */
+        .add-item-box { display: flex; gap: 10px; border-top: 1px solid #eee; padding-top: 20px; }
+        .add-item-input { flex: 1; padding: 12px 15px; border: 1px solid #e0e0e0; border-radius: 8px; font-size: 13px; outline: none; background: #fafafa; }
+        .add-item-input:focus { border-color: #7b83a0; }
+        .add-item-btn { background: #7b83a0; color: white; border: none; border-radius: 8px; width: 45px; font-size: 20px; font-weight: bold; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+    </style>
+</head>
+<body>
+
+<div class="phone-container">
+    <div class="header-section">
+        <div class="header-title">
+            <h2>4天3夜 首爾HAPPY</h2>
+            <p>2026/09/04 - 09/07 黑皮</p>
+        </div>
+        <div class="avatar"></div>
+    </div>
+
+    <div class="tab-menu">
+        <div class="tab-item" onclick="switchPage('page-trip', this)">行程</div>
+        <div class="tab-item" onclick="switchPage('page-tickets', this)">票券</div>
+        <div class="tab-item" onclick="switchPage('page-hotel', this)">住宿</div>
+        <div class="tab-item active" onclick="switchPage('page-shopping', this)">購物</div>
+    </div>
+
+    <div id="page-trip" class="page-content">
+        <div class="day-card" onclick="this.classList.toggle('open')">
+            <div class="day-header">
+                <div class="date-box">五<br>4</div>
+                <div class="trip-content">DAY 1 抵達首爾 ➔ 聖水洞入住</div>
+                <div class="weather-box">☁️<br>°C</div>
+            </div>
+            <div class="day-detail">
+                 <div class="timeline">
+                    <div class="time-box">05:00</div>
+                    <div class="event-box">
+                         <h4>騏騏蕎芸 真航空 CI0162</h4>
+                        <p>01:25 - 05:00 <br>班機：LJ734</p>
+                    </div>
+                </div>
+                <div class="timeline">
+                    <div class="time-box">15:30</div>
+                    <div class="event-box">
+                        <h4>雅婷凱特 中華航空 CI0162</h4>
+                        <p>15:30 - 19:05 <br>機型 333，訂位代號: EBX8K6</p>
+                    </div>
+                </div>
+                <div class="timeline">
+                    <div class="time-box">19:50</div>
+                    <div class="event-box">
+                        <h4>出海關</h4>
+                        <p>搭uber去飯店</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="day-card" onclick="this.classList.toggle('open')">
+            <div class="day-header">
+                <div class="date-box">六<br>5</div>
+                <div class="trip-content">DAY 2 </div>
+                <div class="weather-box">☀️<br>°C</div>
+            </div>
+            <div class="day-detail">
+                <div class="timeline">
+                    <div class="time-box">10:00</div>
+                    <div class="event-box">
+                        <h4>待定</h4>
+                        <p>...</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="day-card" onclick="this.classList.toggle('open')">
+            <div class="day-header">
+                <div class="date-box">日<br>6</div>
+                <div class="trip-content">DAY 3 </div>
+                <div class="weather-box">☀️<br>°C</div>
+            </div>
+            <div class="day-detail">
+                <div class="timeline">
+                    <div class="time-box">10:00</div>
+                    <div class="event-box">
+                        <h4>待定</h4>
+                        <p>...</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="day-card" onclick="this.classList.toggle('open')">
+            <div class="day-header">
+                <div class="date-box">一<br>7</div>
+                <div class="trip-content">DAY 4 </div>
+                <div class="weather-box">☀️<br>°C</div>
+            </div>
+            <div class="day-detail">
+                <div class="timeline">
+                    <div class="time-box">10:00</div>
+                    <div class="event-box">
+                        <h4>待定</h4>
+                        <p>...</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="page-tickets" class="page-content">
+        <div class="ticket-card">
+            <div>
+                <span class="ticket-badge" style="background: #e3f2fd; color: #0d47a1;">DEPARTURE ➔ 去程</span>
+                <span style="float: right; font-size: 13px; color: #666; font-weight: bold;">9月4日 (五)</span>
+            </div>
+            <div class="flight-info">
+                <div class="airport">
+                    <h4>TPE</h4>
+                    <p>台北桃園 (一航)</p>
+                    <div class="time">15:30</div>
+                </div>
+                <div class="flight-arrow"><span>中華航空 CI162</span></div>
+                <div class="airport">
+                    <h4>ICN</h4>
+                    <p>首爾仁川 (二航)</p>
+                    <div class="time">19:05</div>
+                </div>
+            </div>
+            <div class="ticket-meta">
+                <span>艙等: 經濟艙基本 (N)</span>
+                <span style="color: #2e7d32; font-weight: bold;">● 已確認</span>
+            </div>
+        </div>
+
+        <div class="ticket-card">
+            <div>
+                <span class="ticket-badge" style="background: #ffebee; color: #c62828;">RETURN ➔ 回程</span>
+                <span style="float: right; font-size: 13px; color: #666; font-weight: bold;">9月8日 (二)</span>
+            </div>
+            <div class="flight-info">
+                <div class="airport">
+                    <h4>ICN</h4>
+                    <p>首爾仁川</p>
+                    <div class="time">20:05</div>
+                </div>
+                <div class="flight-arrow"><span>中華航空 CI163</span></div>
+                <div class="airport">
+                    <h4>TPE</h4>
+                    <p>台北桃園</p>
+                    <div class="time">21:50</div>
+                </div>
+            </div>
+            <div class="ticket-meta">
+                <span>總票價: TWD 22,076</span>
+                <span style="color: #2e7d32; font-weight: bold;">● 已確認</span>
+            </div>
+        </div>
+
+        <div class="ticket-card" style="border-left: 4px solid #14b8a6;">
+            <div>
+                <span class="ticket-badge" style="background: #e0f2f1; color: #00796b;">DEPARTURE ➔ 去程 (組員 B)</span>
+                <span style="float: right; font-size: 13px; color: #666; font-weight: bold;">9月4日 (五)</span>
+            </div>
+            <div class="flight-info">
+                <div class="airport">
+                    <h4>TPE</h4>
+                    <p>台北桃園</p>
+                    <div class="time">01:25</div>
+                </div>
+                <div class="flight-arrow">
+                    <span style="color: #00796b;">真航空 LJ734</span>
+                    <span style="font-size: 11px; display:block; color:#999;">2小時35分</span>
+                </div>
+                <div class="airport">
+                    <h4>ICN</h4>
+                    <p>首爾仁川</p>
+                    <div class="time">05:00</div>
+                </div>
+            </div>
+            <div class="ticket-meta">
+                <span>班機：LJ734</span>
+                <span style="color: #00796b; font-weight: bold;">● 已確認</span>
+            </div>
+        </div>
+
+        <div class="ticket-card" style="border-left: 4px solid #14b8a6;">
+            <div>
+                <span class="ticket-badge" style="background: #e0f2f1; color: #00796b;">RETURN ➔ 回程 (組員 B)</span>
+                <span style="float: right; font-size: 13px; color: #666; font-weight: bold;">9月7日~8日</span>
+            </div>
+            <div class="flight-info">
+                <div class="airport">
+                    <h4>ICN</h4>
+                    <p>首爾仁川</p>
+                    <div class="time">22:40</div>
+                </div>
+                <div class="flight-arrow"><span style="color: #00796b;">真航空</span></div>
+                <div class="airport">
+                    <h4>TPE</h4>
+                    <p>台北桃園</p>
+                    <div class="time">00:10 <span style="font-size:10px; color:red;">(+1天)</span></div>
+                </div>
+            </div>
+            <div class="ticket-meta">
+                <span>時間：9/7 22:40 ➔ 9/8 00:10</span>
+                <span style="color: #00796b; font-weight: bold;">● 已確認</span>
+            </div>
+        </div>
+    </div>
+
+    <div id="page-hotel" class="page-content">
+        <div class="hotel-card">
+            <div class="hotel-title">聖水洞優質住宿 (Seongsu)</div>
+            <span class="hotel-tag">🏡 聖水站 3 號出口步行約 5-7 分鐘</span>
+
+            <div class="hotel-info-row">
+                <div class="info-label">入住日期</div>
+                <div class="info-value">9月4日 (五) 入住 ～ 9月7日 (ㄧ) 退房</div>
+            </div>
+            <div class="hotel-info-row">
+                <div class="info-label">英文地址</div>
+                <div class="info-value">5-22 Seongsuil-ro 4ga-gil, Seongdong-gu, Seoul 04781</div>
+            </div>
+            <div class="hotel-info-row">
+                <div class="info-label">韓文地址</div>
+                <div class="info-value" style="user-select: all; background: #f8f9fa; padding: 4px 8px; border-radius: 4px;">서울특별시 성동구 성수일로4가길 5-22</div>
+            </div>
+            <div class="hotel-info-row" style="margin-top: 15px;">
+                <div class="info-label">溫馨提示</div>
+                <div class="info-value" style="color: #666; font-size: 13px;">韓國計程車司機看韓文地址最準確，點擊上面韓文可直接複製。</div>
+            </div>
+
+            <div class="map-btn-group">
+                <a href="https://map.naver.com/v5/search/서울특별시 성동구 성수일로4가길 5-22" target="_blank" class="map-btn btn-naver">開啟 Naver Map</a>
+                <a href="https://www.google.com/maps/search/?api=1&query=5-22+Seongsuil-ro+4ga-gil,+Seoul" target="_blank" class="map-btn btn-google">Google 地圖</a>
+            </div>
+        </div>
+    </div>
+
+    <div id="page-shopping" class="page-content active">
+        <div class="shopping-container">
+            
+            <div class="sub-tabs">
+                <div class="sub-tab active" onclick="switchShoppingTab('彩妝保養', 'list-makeup', this)">彩妝保養</div>
+                <div class="sub-tab" onclick="switchShoppingTab('零食伴手禮', 'list-snacks', this)">零食伴手禮</div>
+                <div class="sub-tab" onclick="switchShoppingTab('潮流服飾', 'list-clothes', this)">潮流服飾</div>
+            </div>
+            
+            <div class="shopping-content">
+                <h3 class="shopping-title" id="shopping-title">彩妝保養 CHECKLIST</h3>
+                
+                <div class="shopping-list-container active" id="list-makeup">
+                  
+                </div>
+
+                <div class="shopping-list-container" id="list-snacks">
+                    <div class="shopping-item" onclick="toggleCheck(this)">
+                        <div class="checkbox"></div>
+                        <div class="item-text">
+                            <h4>HBAF 杏仁果 (各種口味)</h4>
+                            <p>蜂蜜奶油、芥末、烤玉米口味必買！</p>
+                        </div>
+                        <div class="circle"></div>
+                    </div>
+                </div>
+
+                <div class="shopping-list-container" id="list-clothes">
+                    <div class="shopping-item" onclick="toggleCheck(this)">
+                        <div class="checkbox"></div>
+                        <div class="item-text">
+                            <h4>Mardi Mercredi 小雛菊短T</h4>
+                            <p>漢南洞旗艦店購買，必備百搭款</p>
+                        </div>
+                        <div class="circle"></div>
+                    </div>
+                </div>
+
+                <div class="add-item-box">
+                    <input type="text" id="new-item-input" class="add-item-input" placeholder="新增至 彩妝保養..." data-target="list-makeup">
+                    <button class="add-item-btn" onclick="addNewShoppingItem()">+</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<script>
+    // 1. 主選單頁面切換
+    function switchPage(pageId, buttonElement) {
+        const pages = document.querySelectorAll('.page-content');
+        pages.forEach(page => page.classList.remove('active'));
+
+        const tabs = document.querySelectorAll('.tab-menu .tab-item');
+        tabs.forEach(tab => tab.classList.remove('active'));
+
+        document.getElementById(pageId).classList.add('active');
+        buttonElement.classList.add('active');
+    }
+
+    // 2. 購物子分類切換 (保留資料不消失)
+    function switchShoppingTab(categoryName, listId, tabElement) {
+        // 切換按鈕樣式
+        document.querySelectorAll('.sub-tab').forEach(tab => tab.classList.remove('active'));
+        tabElement.classList.add('active');
+
+        // 變更標題與輸入框提示字
+        document.getElementById('shopping-title').innerText = categoryName + ' CHECKLIST';
+        const inputField = document.getElementById('new-item-input');
+        inputField.placeholder = '新增至 ' + categoryName + '...';
+        inputField.dataset.target = listId; // 記住現在要新增到哪一個清單
+        
+        // 切換顯示對應的清單
+        document.querySelectorAll('.shopping-list-container').forEach(list => list.classList.remove('active'));
+        document.getElementById(listId).classList.add('active');
+    }
+
+    // 3. 點擊完成打勾
+    function toggleCheck(itemElement) {
+        itemElement.classList.toggle('checked');
+    }
+
+    // 4. 新增購物項目功能
+    function addNewShoppingItem() {
+        const inputField = document.getElementById('new-item-input');
+        const itemName = inputField.value.trim();
+        const targetListId = inputField.dataset.target; // 取得目前的分類清單ID
+        
+        if (itemName !== "") {
+            const listContainer = document.getElementById(targetListId);
+            
+            const newItemHTML = `
+                <div class="shopping-item" onclick="toggleCheck(this)">
+                    <div class="checkbox"></div>
+                    <div class="item-text">
+                        <h4>${itemName}</h4>
+                        <p>自行新增的項目</p>
+                    </div>
+                    <div class="circle"></div>
+                </div>
+            `;
+            
+            listContainer.insertAdjacentHTML('beforeend', newItemHTML);
+            inputField.value = ""; // 清空輸入框
+        }
+    }
+</script>
+
+</body>
+</html>
