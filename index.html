@@ -99,7 +99,9 @@
         .shopping-item .item-text { flex: 1; overflow: hidden; }
         .shopping-item .item-text h4 { margin: 0 0 4px 0; font-size: 14px; color: #333; transition: 0.2s; }
         .shopping-item .item-text p { margin: 0; font-size: 12px; color: #999; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-        .shopping-item .circle { width: 22px; height: 22px; border: 1px solid #eee; border-radius: 50%; flex-shrink: 0; background: #fafafa; }
+        
+        /* 刪除按鈕樣式 */
+        .delete-btn { background: none; border: none; color: #ff6b6b; font-size: 16px; font-weight: bold; cursor: pointer; padding: 5px; margin-left: 10px; display: flex; align-items: center; justify-content: center; }
         
         /* 勾選完成狀態 */
         .shopping-item.checked .checkbox { background: #7b83a0; border-color: #7b83a0; }
@@ -366,7 +368,7 @@
                             <h4>HBAF 杏仁果 (各種口味)</h4>
                             <p>蜂蜜奶油、芥末、烤玉米口味必買！</p>
                         </div>
-                        <div class="circle"></div>
+                        <button class="delete-btn" onclick="deleteShoppingItem(this, event)">✖</button>
                     </div>
                 </div>
 
@@ -377,7 +379,7 @@
                             <h4>Mardi Mercredi 小雛菊短T</h4>
                             <p>漢南洞旗艦店購買，必備百搭款</p>
                         </div>
-                        <div class="circle"></div>
+                        <button class="delete-btn" onclick="deleteShoppingItem(this, event)">✖</button>
                     </div>
                 </div>
 
@@ -404,80 +406,10 @@
         buttonElement.classList.add('active');
     }
 
-    // 2. 購物子分類切換 (保留資料不消失)
+    // 2. 購物子分類切換
     function switchShoppingTab(categoryName, listId, tabElement) {
-        // 切換按鈕樣式
         document.querySelectorAll('.sub-tab').forEach(tab => tab.classList.remove('active'));
         tabElement.classList.add('active');
 
-        // 變更標題與輸入框提示字
         document.getElementById('shopping-title').innerText = categoryName + ' CHECKLIST';
         const inputField = document.getElementById('new-item-input');
-        inputField.placeholder = '新增至 ' + categoryName + '...';
-        inputField.dataset.target = listId; // 記住現在要新增到哪一個清單
-        
-        // 切換顯示對應的清單
-        document.querySelectorAll('.shopping-list-container').forEach(list => list.classList.remove('active'));
-        document.getElementById(listId).classList.add('active');
-    }
-
-    // 3. 點擊完成打勾
-    function toggleCheck(itemElement) {
-        itemElement.classList.toggle('checked');
-        saveShoppingLists(); // 每次點擊打勾，自動存檔
-    }
-
-    // 4. 新增購物項目功能
-    function addNewShoppingItem() {
-        const inputField = document.getElementById('new-item-input');
-        const itemName = inputField.value.trim();
-        const targetListId = inputField.dataset.target; // 取得目前的分類清單ID
-        
-        if (itemName !== "") {
-            const listContainer = document.getElementById(targetListId);
-            
-            const newItemHTML = `
-                <div class="shopping-item" onclick="toggleCheck(this)">
-                    <div class="checkbox"></div>
-                    <div class="item-text">
-                        <h4>${itemName}</h4>
-                        <p>自行新增的項目</p>
-                    </div>
-                    <div class="circle"></div>
-                </div>
-            `;
-            
-            listContainer.insertAdjacentHTML('beforeend', newItemHTML);
-            inputField.value = ""; // 清空輸入框
-            saveShoppingLists(); // 新增項目後，自動存檔
-        }
-    }
-
-    // 5. 儲存三個清單到瀏覽器的 localStorage
-    function saveShoppingLists() {
-        const lists = ['list-makeup', 'list-snacks', 'list-clothes'];
-        lists.forEach(listId => {
-            const listContainer = document.getElementById(listId);
-            localStorage.setItem(listId, listContainer.innerHTML);
-        });
-    }
-
-    // 6. 載入已儲存的清單內容
-    function loadShoppingLists() {
-        const lists = ['list-makeup', 'list-snacks', 'list-clothes'];
-        lists.forEach(listId => {
-            const savedData = localStorage.getItem(listId);
-            if (savedData) {
-                document.getElementById(listId).innerHTML = savedData;
-            }
-        });
-    }
-
-    // 網頁開啟時，自動載入記憶庫資料
-    window.onload = function() {
-        loadShoppingLists();
-    };
-</script>
-
-</body>
-</html>
