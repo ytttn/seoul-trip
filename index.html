@@ -66,7 +66,7 @@
         .time { font-size: 14px; font-weight: bold; color: #5c6285; margin-top: 2px; }
         .flight-arrow { flex: 1; text-align: center; position: relative; color: #b0b5c9; font-size: 12px; }
         .flight-arrow::after { content: ""; display: block; height: 2px; background: dashed #cbd0e1; margin-top: 4px; }
-        .ticket-meta { margin-top: 12px; padding-top: 12px; border-top: 1px dashed #eee; font-size: 13px; color: #666; display: flex; justify-content: space-between; }
+        .ticket-meta { margin-top: 12px; padding-top: 12px; border-top: 1px solid #eee; font-size: 13px; color: #666; display: flex; justify-content: space-between; }
 
         /* === (3) 住宿專屬樣式 === */
         .hotel-card { background: white; border-radius: 16px; padding: 20px; margin-bottom: 16px; box-shadow: 0 4px 12px rgba(0,0,0,0.08); }
@@ -80,7 +80,7 @@
         .btn-naver { background-color: #03C75A; color: white; }
         .btn-google { background-color: #f1f3f4; color: #5c6285; border: 1px solid #dadce0; }
 
-        /* === (4) 購物專屬樣式 (精緻升級版) === */
+        /* === (4) 購物專屬樣式 === */
         .shopping-container { background: white; border-radius: 15px; overflow: hidden; box-shadow: 0 4px 12px rgba(0,0,0,0.08); }
         
         .sub-tabs { display: flex; padding: 10px 10px 0 10px; border-bottom: 1px solid #f0f0f0; }
@@ -257,7 +257,7 @@
                 </div>
             </div>
             <div class="ticket-meta">
-                <span</span>
+                <span>艙等: 經濟艙基本 (N)</span>
                 <span style="color: #2e7d32; font-weight: bold;">● 已確認</span>
             </div>
         </div>
@@ -356,7 +356,7 @@
                 <h3 class="shopping-title" id="shopping-title">彩妝保養 CHECKLIST</h3>
                 
                 <div class="shopping-list-container active" id="list-makeup">
-                  
+                    
                 </div>
 
                 <div class="shopping-list-container" id="list-snacks">
@@ -424,6 +424,7 @@
     // 3. 點擊完成打勾
     function toggleCheck(itemElement) {
         itemElement.classList.toggle('checked');
+        saveShoppingLists(); // 每次點擊打勾，自動存檔
     }
 
     // 4. 新增購物項目功能
@@ -448,8 +449,34 @@
             
             listContainer.insertAdjacentHTML('beforeend', newItemHTML);
             inputField.value = ""; // 清空輸入框
+            saveShoppingLists(); // 新增項目後，自動存檔
         }
     }
+
+    // 5. 儲存三個清單到瀏覽器的 localStorage
+    function saveShoppingLists() {
+        const lists = ['list-makeup', 'list-snacks', 'list-clothes'];
+        lists.forEach(listId => {
+            const listContainer = document.getElementById(listId);
+            localStorage.setItem(listId, listContainer.innerHTML);
+        });
+    }
+
+    // 6. 載入已儲存的清單內容
+    function loadShoppingLists() {
+        const lists = ['list-makeup', 'list-snacks', 'list-clothes'];
+        lists.forEach(listId => {
+            const savedData = localStorage.getItem(listId);
+            if (savedData) {
+                document.getElementById(listId).innerHTML = savedData;
+            }
+        });
+    }
+
+    // 網頁開啟時，自動載入記憶庫資料
+    window.onload = function() {
+        loadShoppingLists();
+    };
 </script>
 
 </body>
